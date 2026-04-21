@@ -3,149 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RG - PRO LOBBY 3D</title>
+    <title>RG - MP40 LOBBY 3D</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Rajdhani', sans-serif; }
-        
-        /* UI OVERLAY */
-        #ui-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 10; display: flex; flex-direction: column;
-            justify-content: space-between; padding: 25px; box-sizing: border-box;
-        }
-        .top-row { display: flex; justify-content: space-between; pointer-events: auto; }
-        .user-pill { background: rgba(0,0,0,0.6); border: 1px solid #00f2fe; padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; }
-        .coins { color: #ffd700; font-weight: bold; }
-
-        .side-menu { display: flex; flex-direction: column; gap: 15px; pointer-events: auto; width: fit-content; }
-        .menu-icon { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; }
-
-        .footer { text-align: center; pointer-events: auto; margin-bottom: 20px; }
-        .start-btn {
-            background: linear-gradient(90deg, #ff00ff, #7000ff); color: white;
-            border: none; padding: 18px 100px; font-size: 28px; font-weight: 800;
-            border-radius: 10px; cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 0 30px rgba(255, 0, 255, 0.5); transition: 0.3s;
-        }
-        .start-btn:hover { letter-spacing: 5px; box-shadow: 0 0 50px #ff00ff; }
+        #ui { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; }
+        .btn { pointer-events: auto; background: rgba(0,0,0,0.7); border: 1px solid #00f2fe; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .start-btn { align-self: center; background: linear-gradient(90deg, #ffde00, #ff8c00); color: black; padding: 15px 60px; font-size: 25px; border-radius: 5px; font-weight: 800; border: none; cursor: pointer; pointer-events: auto; box-shadow: 0 0 20px #ff8c00; }
+        .instruction { position: absolute; bottom: 100px; width: 100%; text-align: center; color: #00f2fe; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <div id="ui-container">
-        <div class="top-row">
-            <div class="user-pill">
-                <img src="https://img.icons8.com/color/48/000000/user-male-circle--v1.png" width="30">
-                <span>GURU PRASAD <br> <small class="coins">Coins: 620</small></span>
-            </div>
-            <div class="user-pill" style="border-color: #ff00ff;">
-                <span>LVL: <b>85</b></span>
-            </div>
+    <div id="ui">
+        <div style="display: flex; justify-content: space-between;">
+            <div class="btn">GURU PRASAD <br> <span style="color: #ffd700;">$ 620</span></div>
+            <div class="btn">LVL 85</div>
         </div>
-
-        <div class="side-menu">
-            <div class="menu-icon">STORE</div>
-            <div class="menu-icon">VAULT</div>
-            <div class="menu-icon">PETS</div>
-        </div>
-
-        <div class="footer">
-            <button class="start-btn">Battle Start</button>
-        </div>
+        <div class="instruction">Swipe to Rotate Lobby</div>
+        <button class="start-btn">START</button>
     </div>
 
     <script>
-        // --- 3D ENGINE START ---
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.05);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
-        // 1. FLOOR (The Ground)
-        const floorGeo = new THREE.PlaneGeometry(100, 100);
-        const floorMat = new THREE.MeshPhongMaterial({ color: 0x111111, shininess: 100 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -3;
-        scene.add(floor);
+        // --- 1. Orbit Controls (Screen Rotation) ---
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; 
+        controls.autoRotate = false;
+        controls.maxPolarAngle = Math.PI / 2; // Floor ke niche nahi jayega
 
-        // 2. THE PODIUM (Jahan character khada hoga)
-        const podiumGeo = new THREE.CylinderGeometry(3, 3.5, 0.5, 32);
-        const podiumMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 });
-        const podium = new THREE.Mesh(podiumGeo, podiumMat);
-        podium.position.y = -2.75;
-        scene.add(podium);
+        // --- 2. Environment ---
+        const grid = new THREE.GridHelper(50, 50, 0x00f2fe, 0x111111);
+        grid.position.y = -3;
+        scene.add(grid);
 
-        // Podium Neon Ring
-        const ringGeo = new THREE.TorusGeometry(3.1, 0.05, 16, 100);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2;
-        ring.position.y = -2.5;
-        scene.add(ring);
-
-        // 3. CHARACTER (A placeholder for your 3D Model)
+        // --- 3. MP40 CHARACTER ---
         const charGroup = new THREE.Group();
-        const bodyGeo = new THREE.CapsuleGeometry(1, 2, 4, 8);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x7000ff, emissive: 0x220055 });
-        const character = new THREE.Mesh(bodyGeo, bodyMat);
-        charGroup.add(character);
+
+        // Body (Cyber Suit)
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 1.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9 }));
+        charGroup.add(body);
+
+        // MP40 Gun (Box Modeling)
+        const mp40Group = new THREE.Group();
+        // Main Body
+        const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 1.5), new THREE.MeshStandardMaterial({ color: 0xffde00, emissive: 0x332200 }));
+        mp40Group.add(gunBody);
+        // Barrel
+        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        barrel.rotation.x = Math.PI / 2;
+        barrel.position.z = 1;
+        mp40Group.add(barrel);
+        // Magazine
+        const mag = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.3), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        mag.position.y = -0.4;
+        mp40Group.add(mag);
+
+        // Pakdne ki Position
+        mp40Group.position.set(0.8, 0, 0.5);
+        mp40Group.rotation.y = -0.2;
+        charGroup.add(mp40Group);
+        
         charGroup.position.y = -0.5;
         scene.add(charGroup);
 
-        // 4. ROOM WALLS (Cyberpunk Bunker style)
-        for(let i=0; i<8; i++) {
-            const wallGeo = new THREE.BoxGeometry(0.5, 15, 5);
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x050505 });
-            const wall = new THREE.Mesh(wallGeo, wallMat);
-            const angle = (i / 8) * Math.PI * 2;
-            wall.position.set(Math.cos(angle)*15, 4, Math.sin(angle)*15);
-            wall.lookAt(0, 4, 0);
-            scene.add(wall);
+        // --- 4. Lights ---
+        const hLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
+        scene.add(hLight);
+        const pLight = new THREE.PointLight(0x00f2fe, 2, 20);
+        pLight.position.set(2, 5, 5);
+        scene.add(pLight);
 
-            // Neon Stripes on Walls
-            const stripeGeo = new THREE.PlaneGeometry(0.1, 10);
-            const stripeMat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0x00f2fe : 0xff00ff });
-            const stripe = new THREE.Mesh(stripeGeo, stripeMat);
-            stripe.position.set(Math.cos(angle)*14.7, 4, Math.sin(angle)*14.7);
-            stripe.lookAt(0, 4, 0);
-            scene.add(stripe);
-        }
+        camera.position.set(0, 2, 10);
 
-        // 5. LIGHTING
-        const mainLight = new THREE.PointLight(0x00f2fe, 2, 20);
-        mainLight.position.set(0, 5, 0);
-        scene.add(mainLight);
-
-        const pinkLight = new THREE.PointLight(0xff00ff, 1.5, 20);
-        pinkLight.position.set(-5, 2, 5);
-        scene.add(pinkLight);
-
-        camera.position.set(0, 1, 12);
-        camera.lookAt(0, 1, 0);
-
-        // --- ANIMATION LOOP ---
+        // --- 5. Animation ---
         function animate() {
             requestAnimationFrame(animate);
-
-            // Character rotate (Idle style)
-            charGroup.rotation.y += 0.005;
+            controls.update(); // Rotation smooth karne ke liye
+            
+            // Idle Floating
             charGroup.position.y = -0.5 + Math.sin(Date.now() * 0.001) * 0.1;
-
-            // Pulsing Neon Ring
-            ringMat.opacity = 0.5 + Math.sin(Date.now() * 0.005) * 0.5;
+            mp40Group.rotation.z = Math.sin(Date.now() * 0.002) * 0.05;
 
             renderer.render(scene, camera);
         }
         animate();
 
-        // Responsive handling
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
